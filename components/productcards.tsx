@@ -1,5 +1,6 @@
 import React from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { useCart } from "../store/cartcpntexst"; // ✅ import the global cart hook
 
 export type Product = {
   id: number;
@@ -16,11 +17,12 @@ export type Product = {
 
 type Props = {
   product: Product;
-  onPress?: (id: number) => void; // e.g., open details later
-  onAddToCart?: (id: number) => void; // optional action
+  onPress?: (id: number) => void; // maybe later for product details
 };
 
-function ProductCard({ product, onPress, onAddToCart }: Props) {
+function ProductCard({ product, onPress }: Props) {
+  const { add } = useCart(); // ✅ get add() from Cart context
+
   return (
     <Pressable onPress={() => onPress?.(product.id)} style={styles.card}>
       {/* image */}
@@ -32,7 +34,7 @@ function ProductCard({ product, onPress, onAddToCart }: Props) {
         />
       </View>
 
-      {/* text/info */}
+      {/* info */}
       <View style={styles.info}>
         <Text style={styles.title}>{product.title}</Text>
 
@@ -41,18 +43,26 @@ function ProductCard({ product, onPress, onAddToCart }: Props) {
           <Text style={styles.category}>{product.category}</Text>
         </View>
 
-        {/* rating (if provided) */}
         {product.rating && (
           <Text style={styles.rating}>
             Rating: {product.rating.rate} ★ ({product.rating.count})
           </Text>
         )}
 
-        <Text style={styles.description}>{product.description}</Text>
+        <Text numberOfLines={2} style={styles.description}>
+          {product.description}
+        </Text>
 
-        {/* actions */}
+        {/* ✅ Add to Cart button */}
         <Pressable
-          onPress={() => onAddToCart?.(product.id)}
+          onPress={() =>
+            add({
+              id: product.id,
+              title: product.title,
+              price: product.price,
+              image: product.image,
+            })
+          }
           style={styles.button}
         >
           <Text style={styles.buttonText}>Add to cart</Text>
@@ -69,7 +79,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginHorizontal: 12,
     marginVertical: 8,
-    // soft shadow
     shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -84,27 +93,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "rgba(0,0,0,0.06)",
   },
-  image: {
-    width: "80%",
-    height: "100%",
-  },
-  info: {
-    padding: 12,
-    gap: 6,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  price: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
+  image: { width: "80%", height: "100%" },
+  info: { padding: 12, gap: 6 },
+  title: { fontSize: 16, fontWeight: "600" },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  price: { fontSize: 16, fontWeight: "700" },
   category: {
     fontSize: 12,
     color: "#666",
@@ -113,15 +106,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: "#f0f0f0",
   },
-  rating: {
-    fontSize: 12,
-    color: "#333",
-  },
-  description: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: "#222",
-  },
+  rating: { fontSize: 12, color: "#333" },
+  description: { fontSize: 13, lineHeight: 18, color: "#222" },
   button: {
     marginTop: 8,
     backgroundColor: "#000",
@@ -129,10 +115,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
   },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
+  buttonText: { color: "#fff", fontWeight: "600" },
 });
 
 export default ProductCard;

@@ -1,8 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 function Footer() {
+  const router = useRouter();
+
   return (
     <View style={styles.footer}>
       <NavItem
@@ -13,14 +16,17 @@ function Footer() {
       <NavItem
         label="Categories"
         icon={<Ionicons name="grid-outline" size={22} color="#fff" />}
+        onPress={() => router.push("/categories")}
       />
       <NavItem
         label="Cart"
         icon={<Ionicons name="cart-outline" size={22} color="#fff" />}
+        onPress={() => router.push("/cart")}
       />
       <NavItem
         label="Profile"
         icon={<Ionicons name="person-outline" size={22} color="#fff" />}
+        onPress={() => router.push("/profile")}
       />
     </View>
   );
@@ -59,19 +65,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     paddingVertical: 12,
   },
-  item: {
-    alignItems: "center",
-  },
-  iconText: {
-    fontSize: 22,
-    color: "#fff",
-    lineHeight: 22,
-  },
-  label: {
-    fontSize: 12,
-    color: "#fff",
-    marginTop: 2,
-  },
+  item: { alignItems: "center" },
+  iconText: { fontSize: 22, color: "#fff", lineHeight: 22 },
+  label: { fontSize: 12, color: "#fff", marginTop: 2 },
 });
 
 export default Footer;
