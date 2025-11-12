@@ -1,5 +1,28 @@
 import { Stack } from "expo-router";
+import { StyleSheet, View } from "react-native";
+import Footer from "../components/footer";
+import Header from "../components/header";
 
-export default function RootLayout() {
-  return <Stack />;
+function RootLayout() {
+  return (
+    <View style={{ flex: 2 }}>
+      <Header />
+
+      <View style={styles.content}>
+        <Stack screenOptions={{ headerShown: false }} />
+      </View>
+      <Footer />
+    </View>
+  );
 }
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  content: {
+    flex: 1,
+  },
+});
+
+export default RootLayout;
