@@ -1,50 +1,84 @@
-# Welcome to your Expo app 👋
+# FakeStore Mobile Shop
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Simple React Native / Expo mobile shop app built for exam.  
+It uses the FakeStore API for products and users, supports authentication, cart with persistence, and a profile screen with avatar upload.
 
-## Get started
+---
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+### 🧑‍💻 Authentication
 
-2. Start the app
+- Login with **username + password**
+- Registration form (creates user on FakeStore API)
+- Validation using **react-hook-form + Yup**
+- **"Remember me"** checkbox:
+  - If checked → token + user are saved in AsyncStorage
+  - If not checked → data is kept only in memory
 
-   ```bash
-   npx expo start
-   ```
+### 🛒 Products & Cart
 
-In the output, you'll find options to open the app in a
+- Products list page with:
+  - Product image, title, price, category and rating
+- Product details page:
+  - Bigger image, full description, rating, Add to cart button
+- Cart page:
+  - Add / remove items
+  - Increase / decrease quantity
+  - Shows subtotal
+  - Cart data stored in **AsyncStorage**, so it survives app reload
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 👤 Profile
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- Shows logged-in FakeStore user:
+  - Username, name, email, phone, address
+- Logout button
+- Registration modal to create new account
+- Uses global `AuthContext` for auth state
 
-## Get a fresh project
+### 🖼 Avatar + Permissions (expo-image-picker)
 
-When you're ready, run:
+- On the Profile screen, the user can:
+  - Tap **“Change photo”**
+  - App requests **media library permission**
+  - User picks an image from gallery
+  - Avatar is displayed as a round profile picture
+  - Avatar is stored in AsyncStorage (only when "Remember me" is enabled)
 
-```bash
-npm run reset-project
+This satisfies the requirement of using **one library that needs permissions**.
+
+---
+
+## Tech Stack
+
+- [Expo](https://expo.dev/)
+- React Native
+- TypeScript
+- [expo-router](https://expo.github.io/router/)
+- `react-hook-form`
+- `yup` + `@hookform/resolvers`
+- `@react-native-async-storage/async-storage`
+- `expo-image-picker`
+- FakeStore API (`https://fakestoreapi.com`)
+
+---
+
+## Project Structure (short)
+
+```text
+app/
+  index.tsx             # Home / products list
+  _layout.tsx           # Layout with header/footer and providers
+  cart.tsx              # Cart screen
+  profile/
+    profile.tsx         # Decides: LoggedInView vs LoginForm + RegisterModal
+    LoggedInView.tsx    # Profile info + avatar + logout
+    LoginForm.tsx       # Login form, remember me, validation
+    RegisterModal.tsx   # Registration modal form
+  product/
+    [id].tsx            # Product details screen
+
+store/
+  authContext.tsx       # Auth + remember me + avatar + AsyncStorage
+  cartcpntexst.tsx      # Cart context + AsyncStorage
 ```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.

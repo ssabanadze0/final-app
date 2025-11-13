@@ -1,4 +1,3 @@
-// store/authContext.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
@@ -7,20 +6,14 @@ export type FakeStoreUser = {
   email: string;
   username: string;
   password: string;
-  name: {
-    firstname: string;
-    lastname: string;
-  };
+  name: { firstname: string; lastname: string };
   phone: string;
   address: {
     city: string;
     street: string;
     number: number;
     zipcode: string;
-    geolocation: {
-      lat: string;
-      long: string;
-    };
+    geolocation: { lat: string; long: string };
   };
   __v?: number;
 };
@@ -28,6 +21,7 @@ export type FakeStoreUser = {
 type AuthState = {
   user: FakeStoreUser | null;
   token: string | null;
+  avatar: string | null;
   loading: boolean;
   error: string | null;
   login: (
@@ -39,21 +33,21 @@ type AuthState = {
     username: string;
     email: string;
     password: string;
-  }) => Promise<boolean>; // 👈 change here
+  }) => Promise<boolean>;
   logout: () => Promise<void>;
+  setAvatar: (uri: string | null) => Promise<void>;
 };
 
 const STORAGE_KEY = "@fakestore_auth";
-
 const AuthCtx = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<FakeStoreUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [avatar, setAvatarState] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 🔁 1. On app start, try to restore saved auth
   useEffect(() => {
     (async () => {
       try {
@@ -63,17 +57,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const parsed = JSON.parse(raw) as {
           token: string | null;
           user: FakeStoreUser;
+          avatar?: string | null;
         };
 
         setToken(parsed.token ?? null);
         setUser(parsed.user);
-      } catch (e) {
-        console.warn("Failed to restore auth", e);
-      }
+        setAvatarState(parsed.avatar ?? null);
+      } catch {}
     })();
   }, []);
 
-  // 🔐 2. Login, with optional remember flag
   async function login(
     username: string,
     password: string,
@@ -83,43 +76,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       setError(null);
 
-      // 1) ask FakeStore for token
       const res = await fetch("https://fakestoreapi.com/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
 
-      if (!res.ok) {
-        throw new Error("Invalid credentials");
-      }
+      if (!res.ok) throw new Error("Invalid credentials");
 
       const data: { token: string } = await res.json();
       setToken(data.token);
 
-      // 2) fetch all users and find this username
       const usersRes = await fetch("https://fakestoreapi.com/users");
       const users: FakeStoreUser[] = await usersRes.json();
       const found = users.find((u) => u.username === username);
 
-      if (!found) {
-        throw new Error("User not found in FakeStore");
-      }
+      if (!found) throw new Error("User not found");
 
       setUser(found);
 
-      // 3) if "remember me" is checked → save to storage
       if (remember) {
         await AsyncStorage.setItem(
           STORAGE_KEY,
-          JSON.stringify({ token: data.token, user: found })
+          JSON.stringify({
+            token: data.token,
+            user: found,
+            avatar: null,
+          })
         );
       } else {
-        // make sure nothing is stored if remember is OFF
         await AsyncStorage.removeItem(STORAGE_KEY);
       }
     } catch (e: any) {
-      console.error(e);
       setError(e.message ?? "Login failed");
       setUser(null);
       setToken(null);
@@ -141,26 +129,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch("https://fakestoreapi.com/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: data.username,
-          email: data.email,
-          password: data.password,
-        }),
+        body: JSON.stringify(data),
       });
 
-      // ✅ success if status 2xx (200–299)
-      if (!res.ok) {
-        throw new Error("Registration failed");
-      }
+      if (!res.ok) throw new Error("Registration failed");
 
-      const created = await res.json();
-      console.log("User created on FakeStore:", created);
-
-      // ❌ no setUser, no setToken – NO auto login
-      // user will log in manually afterwards
+      await res.json();
       return true;
     } catch (e: any) {
-      console.error(e);
       setError(e.message ?? "Registration failed");
       return false;
     } finally {
@@ -168,22 +144,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // 🚪 4. Logout clears state AND storage
   async function logout() {
     setUser(null);
     setToken(null);
+    setAvatarState(null);
     setError(null);
     await AsyncStorage.removeItem(STORAGE_KEY);
+  }
+
+  async function setAvatar(uri: string | null) {
+    setAvatarState(uri);
+
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+
+    const parsed = JSON.parse(raw) as {
+      token: string | null;
+      user: FakeStoreUser | null;
+      avatar?: string | null;
+    };
+
+    const updated = {
+      ...parsed,
+      avatar: uri,
+    };
+
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   }
 
   const value: AuthState = {
     user,
     token,
+    avatar,
     loading,
     error,
     login,
     register,
     logout,
+    setAvatar,
   };
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
