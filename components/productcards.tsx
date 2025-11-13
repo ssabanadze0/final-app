@@ -43,7 +43,9 @@ function ProductCard({ product }: Props) {
       </View>
 
       <View style={styles.info}>
-        <Text style={styles.title}>{product.title}</Text>
+        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+          {product.title}
+        </Text>
 
         <View style={styles.metaRow}>
           <Text style={styles.price}>${product.price.toFixed(2)}</Text>
@@ -80,15 +82,17 @@ function ProductCard({ product }: Props) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
+    flex: 1,
     borderRadius: 12,
     overflow: "hidden",
-    marginHorizontal: 12,
+    // marginHorizontal: 12,
     marginVertical: 8,
     shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
     elevation: 2,
+    minHeight: 280,
   },
   imageWrap: {
     backgroundColor: "#fafafa",

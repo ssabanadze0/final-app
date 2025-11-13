@@ -1,9 +1,10 @@
+import FingerprintLoginButton from "@/components/FingerprintLoginButton";
 import { useAuth } from "@/store/authContext";
+
 import { yupResolver } from "@hookform/resolvers/yup";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -130,17 +131,11 @@ export default function LoginForm({
 
       {error && <Text style={styles.errorText}>{error}</Text>}
 
-      <Pressable
-        style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
+      <FingerprintLoginButton
+        loading={loading}
         onPress={handleSubmit(onSubmit)}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.submitText}>Log in</Text>
-        )}
-      </Pressable>
+        text="LOGIN"
+      />
 
       <View style={styles.registerHintRow}>
         <Text style={styles.smallText}>Don&apos;t have an account?</Text>
