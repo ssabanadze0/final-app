@@ -1,31 +1,30 @@
+import { AuthProvider } from "@/store/authContext";
 import { CartProvider } from "@/store/cartcpntexst";
 import { Stack } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import Footer from "../components/footer";
 import Header from "../components/header";
 
-function RootLayout() {
+export default function RootLayout() {
   return (
-    <View style={{ flex: 2 }}>
+    <AuthProvider>
       <CartProvider>
-        <Header />
+        <View style={{ flex: 1 }}>
+          <Header />
 
-        <View style={styles.content}>
-          <Stack screenOptions={{ headerShown: false }} />
+          <View style={styles.content}>
+            <Stack screenOptions={{ headerShown: false }} />
+          </View>
+
+          <Footer />
         </View>
-        <Footer />
       </CartProvider>
-    </View>
+    </AuthProvider>
   );
 }
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
   content: {
     flex: 1,
   },
 });
-
-export default RootLayout;

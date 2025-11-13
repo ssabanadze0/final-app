@@ -13,11 +13,7 @@ function Footer() {
         icon={<Ionicons name="home-outline" size={22} color="#fff" />}
         onPress={() => router.push("/")}
       />
-      <NavItem
-        label="Categories"
-        icon={<Ionicons name="grid-outline" size={22} color="#fff" />}
-        onPress={() => router.push("/categories")}
-      />
+
       <NavItem
         label="Cart"
         icon={<Ionicons name="cart-outline" size={22} color="#fff" />}
