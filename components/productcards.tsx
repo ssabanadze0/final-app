@@ -49,10 +49,10 @@ function ProductCard({ product }: Props) {
           <Text style={styles.price}>${product.price.toFixed(2)}</Text>
           <Text style={styles.category}>{product.category}</Text>
         </View>
-
         {product.rating && (
           <Text style={styles.rating}>
-            Rating: {product.rating.rate} ★ ({product.rating.count})
+            Rating: {product.rating.rate} <Text style={styles.star}>★</Text> (
+            {product.rating.count})
           </Text>
         )}
 
@@ -112,6 +112,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f0f0",
   },
   rating: { fontSize: 12, color: "#333" },
+  star: { color: "#f5c518" },
   description: { fontSize: 13, lineHeight: 18, color: "#222" },
   button: {
     marginTop: 8,

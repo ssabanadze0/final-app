@@ -1,4 +1,3 @@
-// app/profile.tsx
 import { useAuth } from "@/store/authContext";
 import { yupResolver } from "@hookform/resolvers/yup";
 import React, { useState } from "react";
@@ -14,18 +13,24 @@ import {
 } from "react-native";
 import * as yup from "yup";
 
-type LoginForm = {
+type LoginFormValues = {
   username: string;
   password: string;
 };
 
-const schema = yup.object({
+const loginSchema = yup.object({
   username: yup.string().required("Username is required"),
   password: yup.string().required("Password is required"),
 });
 
-export default function Profile() {
-  const { user, login, logout, loading, error } = useAuth();
+export default function LoginForm({
+  registerSuccess,
+  onOpenRegister,
+}: {
+  registerSuccess: boolean;
+  onOpenRegister: () => void;
+}) {
+  const { login, loading, error } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -34,58 +39,28 @@ export default function Profile() {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginForm>({
-    resolver: yupResolver(schema),
+  } = useForm<LoginFormValues>({
+    resolver: yupResolver(loginSchema),
     defaultValues: {
-      username: "johnd", // pre-filled for you
+      username: "johnd",
       password: "m38rmF$",
     },
   });
 
-  async function onSubmit(values: LoginForm) {
-    // later you can use rememberMe here
-    await login(values.username, values.password);
+  async function onSubmit(values: LoginFormValues) {
+    await login(values.username, values.password, rememberMe);
   }
 
-  // ---------- LOGGED IN: show profile ----------
-  if (user) {
-    return (
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Profile</Text>
-
-        <Text style={styles.label}>Username</Text>
-        <Text style={styles.value}>{user.username}</Text>
-
-        <Text style={styles.label}>Name</Text>
-        <Text style={styles.value}>
-          {user.name.firstname} {user.name.lastname}
-        </Text>
-
-        <Text style={styles.label}>Email</Text>
-        <Text style={styles.value}>{user.email}</Text>
-
-        <Text style={styles.label}>Phone</Text>
-        <Text style={styles.value}>{user.phone}</Text>
-
-        <Text style={styles.label}>Address</Text>
-        <Text style={styles.value}>
-          {user.address.street} {user.address.number}, {user.address.city}{" "}
-          {user.address.zipcode}
-        </Text>
-
-        <Pressable style={styles.logoutBtn} onPress={logout}>
-          <Text style={styles.logoutText}>Log out</Text>
-        </Pressable>
-      </ScrollView>
-    );
-  }
-
-  // ---------- NOT LOGGED IN: login form ----------
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Login to your account</Text>
 
-      {/* Username */}
+      {registerSuccess && (
+        <Text style={styles.successText}>
+          Account created. You can log in now.
+        </Text>
+      )}
+
       <View style={styles.field}>
         <Text style={styles.label}>Username</Text>
         <Controller
@@ -99,6 +74,7 @@ export default function Profile() {
               placeholder="johnd"
               placeholderTextColor="#999"
               autoCapitalize="none"
+              editable={!loading}
               style={styles.input}
             />
           )}
@@ -108,7 +84,6 @@ export default function Profile() {
         )}
       </View>
 
-      {/* Password + show/hide */}
       <View style={styles.field}>
         <Text style={styles.label}>Password</Text>
         <Controller
@@ -124,6 +99,7 @@ export default function Profile() {
                 placeholderTextColor="#999"
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                editable={!loading}
                 style={[styles.input, styles.passwordInput]}
               />
               <Pressable
@@ -142,7 +118,6 @@ export default function Profile() {
         )}
       </View>
 
-      {/* Remember me */}
       <Pressable
         style={styles.rememberRow}
         onPress={() => setRememberMe((prev) => !prev)}
@@ -166,6 +141,13 @@ export default function Profile() {
           <Text style={styles.submitText}>Log in</Text>
         )}
       </Pressable>
+
+      <View style={styles.registerHintRow}>
+        <Text style={styles.smallText}>Don&apos;t have an account?</Text>
+        <Pressable onPress={onOpenRegister} style={styles.linkBtn}>
+          <Text style={styles.linkText}>Create one</Text>
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }
@@ -178,9 +160,14 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "700",
-    marginBottom: 24,
+    marginBottom: 20,
+  },
+  successText: {
+    color: "#0a7a0a",
+    fontSize: 13,
+    marginBottom: 12,
   },
   field: {
     marginBottom: 16,
@@ -198,6 +185,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     fontSize: 16,
     backgroundColor: "#fafafa",
+    color: "#000",
   },
   passwordRow: {
     flexDirection: "row",
@@ -265,19 +253,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  value: {
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  logoutBtn: {
-    marginTop: 24,
-    backgroundColor: "#eee",
-    borderRadius: 10,
-    paddingVertical: 10,
+  registerHintRow: {
+    marginTop: 16,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
   },
-  logoutText: {
+  smallText: {
+    fontSize: 13,
+    color: "#555",
+  },
+  linkBtn: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  linkText: {
+    fontSize: 13,
     color: "#000",
     fontWeight: "600",
+    textDecorationLine: "underline",
   },
 });

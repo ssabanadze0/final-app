@@ -1,5 +1,6 @@
 // store/authContext.tsx
-import React, { createContext, useContext, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 export type FakeStoreUser = {
   id: number;
@@ -29,14 +30,20 @@ type AuthState = {
   token: string | null;
   loading: boolean;
   error: string | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (
+    username: string,
+    password: string,
+    remember?: boolean
+  ) => Promise<void>;
   register: (data: {
     username: string;
     email: string;
     password: string;
-  }) => Promise<void>;
-  logout: () => void;
+  }) => Promise<boolean>; // 👈 change here
+  logout: () => Promise<void>;
 };
+
+const STORAGE_KEY = "@fakestore_auth";
 
 const AuthCtx = createContext<AuthState | null>(null);
 
@@ -46,12 +53,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function login(username: string, password: string) {
+  // 🔁 1. On app start, try to restore saved auth
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+
+        const parsed = JSON.parse(raw) as {
+          token: string | null;
+          user: FakeStoreUser;
+        };
+
+        setToken(parsed.token ?? null);
+        setUser(parsed.user);
+      } catch (e) {
+        console.warn("Failed to restore auth", e);
+      }
+    })();
+  }, []);
+
+  // 🔐 2. Login, with optional remember flag
+  async function login(
+    username: string,
+    password: string,
+    remember: boolean = false
+  ) {
     try {
       setLoading(true);
       setError(null);
 
-      // 1) ask FakeStore for a token
+      // 1) ask FakeStore for token
       const res = await fetch("https://fakestoreapi.com/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -65,21 +97,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data: { token: string } = await res.json();
       setToken(data.token);
 
-      // 2) fetch all users and find the one with this username
+      // 2) fetch all users and find this username
       const usersRes = await fetch("https://fakestoreapi.com/users");
       const users: FakeStoreUser[] = await usersRes.json();
       const found = users.find((u) => u.username === username);
 
       if (!found) {
-        throw new Error("User not found in FakeStore users list");
+        throw new Error("User not found in FakeStore");
       }
 
       setUser(found);
+
+      // 3) if "remember me" is checked → save to storage
+      if (remember) {
+        await AsyncStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ token: data.token, user: found })
+        );
+      } else {
+        // make sure nothing is stored if remember is OFF
+        await AsyncStorage.removeItem(STORAGE_KEY);
+      }
     } catch (e: any) {
       console.error(e);
       setError(e.message ?? "Login failed");
       setUser(null);
       setToken(null);
+      await AsyncStorage.removeItem(STORAGE_KEY);
     } finally {
       setLoading(false);
     }
@@ -89,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     username: string;
     email: string;
     password: string;
-  }) {
+  }): Promise<boolean> {
     try {
       setLoading(true);
       setError(null);
@@ -97,8 +141,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch("https://fakestoreapi.com/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Minimal body: FakeStore docs show id, username, email, password,
-        // but id is usually auto-generated – we can omit it.
         body: JSON.stringify({
           username: data.username,
           email: data.email,
@@ -106,27 +148,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }),
       });
 
-      // 👉 for your assignment you mainly need to check this:
+      // ✅ success if status 2xx (200–299)
       if (!res.ok) {
         throw new Error("Registration failed");
       }
 
-      const created: FakeStoreUser = await res.json();
-      // optional: auto-login newly created user
-      setUser(created);
-      setToken(null); // FakeStore /users doesn’t return a token
+      const created = await res.json();
+      console.log("User created on FakeStore:", created);
+
+      // ❌ no setUser, no setToken – NO auto login
+      // user will log in manually afterwards
+      return true;
     } catch (e: any) {
       console.error(e);
       setError(e.message ?? "Registration failed");
+      return false;
     } finally {
       setLoading(false);
     }
   }
 
-  function logout() {
+  // 🚪 4. Logout clears state AND storage
+  async function logout() {
     setUser(null);
     setToken(null);
     setError(null);
+    await AsyncStorage.removeItem(STORAGE_KEY);
   }
 
   const value: AuthState = {

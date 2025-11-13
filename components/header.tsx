@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "#f5f5f5",
     paddingHorizontal: 12,
-    paddingTop: 40, // keeps the same top spacing you liked
+    paddingTop: 40,
     paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(0,0,0,0.06)",
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    borderRadius: 999, // rounded, Amazon-like
+    borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
     shadowColor: "#000",

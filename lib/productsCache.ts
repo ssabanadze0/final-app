@@ -1,4 +1,3 @@
-// lib/productsCache.ts
 import type { Product } from "../components/productcards";
 
 export async function getProducts(): Promise<Product[]> {
