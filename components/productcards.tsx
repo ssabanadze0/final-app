@@ -1,6 +1,7 @@
+import { useRouter } from "expo-router";
 import React from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { useCart } from "../store/cartcpntexst"; // ✅ import the global cart hook
+import { useCart } from "../store/cartcpntexst";
 
 export type Product = {
   id: number;
@@ -17,15 +18,22 @@ export type Product = {
 
 type Props = {
   product: Product;
-  onPress?: (id: number) => void; // maybe later for product details
 };
 
-function ProductCard({ product, onPress }: Props) {
-  const { add } = useCart(); // ✅ get add() from Cart context
+function ProductCard({ product }: Props) {
+  const { add } = useCart();
+  const router = useRouter();
 
   return (
-    <Pressable onPress={() => onPress?.(product.id)} style={styles.card}>
-      {/* image */}
+    <Pressable
+      onPress={() =>
+        router.push({
+          pathname: "/product/[id]",
+          params: { id: String(product.id) },
+        })
+      }
+      style={styles.card}
+    >
       <View style={styles.imageWrap}>
         <Image
           source={{ uri: product.image }}
@@ -34,7 +42,6 @@ function ProductCard({ product, onPress }: Props) {
         />
       </View>
 
-      {/* info */}
       <View style={styles.info}>
         <Text style={styles.title}>{product.title}</Text>
 
@@ -53,7 +60,6 @@ function ProductCard({ product, onPress }: Props) {
           {product.description}
         </Text>
 
-        {/* ✅ Add to Cart button */}
         <Pressable
           onPress={() =>
             add({
@@ -71,7 +77,6 @@ function ProductCard({ product, onPress }: Props) {
     </Pressable>
   );
 }
-
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
